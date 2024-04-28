@@ -10,6 +10,8 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import pages.HomePage;
+import pages.SearchResultsPage;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
 
 public class TakealotSearchTest {
 
+    private static final String SEARCH_PHRASE = "iphone";
     private static WebDriver driver;
     private static WebDriverWait wait;
 
@@ -33,25 +36,16 @@ public class TakealotSearchTest {
         // Navigate to Takealot
         driver.get("https://takealot.com");
 
-        // Find the search element and perform a search
-        WebElement searchInput = driver.findElement(By.cssSelector("input[name='search']"));
-        String searchPhrase = "iPhone";
-        searchInput.sendKeys(searchPhrase);
-        searchInput.sendKeys(Keys.ENTER);
+        HomePage homePage = new HomePage(driver);
+        SearchResultsPage searchResultsPage = new SearchResultsPage(driver);
+
+        homePage.performSearch(SEARCH_PHRASE);
 
         // Wait for the search results to load
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("a.product-anchor")));
 
-        // List off items
-        List<WebElement> itemElements = driver.findElements(By.cssSelector("a.product-anchor"));
-        List<String> actualItems = itemElements.stream()
-                .map(element -> element.getText().toLowerCase() + element.getAttribute("href").toLowerCase())
-                .collect(Collectors.toList());
-
-        // Verify that the search results contain the expected items
-        List<String> expectedItems = actualItems.stream()
-                .filter(item -> item.contains(searchPhrase.toLowerCase()))
-                .collect(Collectors.toList());
+        List<String> actualItems = searchResultsPage.searchResultsItemsText();
+        List<String> expectedItems = searchResultsPage.searchResultsItemsWithText(SEARCH_PHRASE);
 
         Assertions.assertEquals(expectedItems, actualItems);
     }
